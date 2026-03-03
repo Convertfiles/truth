@@ -139,12 +139,12 @@ a{text-decoration:none;color:inherit;}
 .slide-ad{flex-shrink:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:var(--card);position:relative;}
 
 /* Image wrap */
-.s-img-wrap{flex-shrink:0;width:100%;position:relative;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center;}
-.s-img-scroll{display:flex;width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;}
+.s-img-wrap{flex-shrink:0;width:100%;height:42vh;min-height:200px;max-height:320px;position:relative;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center;}
+.s-img-scroll{display:flex;width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .s-img-scroll::-webkit-scrollbar{display:none;}
 .s-img-item{flex-shrink:0;width:100%;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;background:var(--card2);position:relative;overflow:hidden;}
 .s-img-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-.s-img-emoji{font-size:60px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.3));position:relative;z-index:1;}
+.s-img-emoji{font-size:80px;filter:drop-shadow(0 4px 24px rgba(0,0,0,.5));position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(135deg,var(--card2),var(--panel));}
 .s-img-grad{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,var(--card),transparent);pointer-events:none;}
 .s-cat-tag{position:absolute;top:9px;left:9px;z-index:2;display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:9px;font-weight:700;font-family:var(--fs);text-transform:uppercase;letter-spacing:.09em;border:1px solid currentColor;background:rgba(0,0,0,.55);color:var(--text);backdrop-filter:blur(6px);}
 .s-img-dots{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2;}
@@ -154,7 +154,7 @@ a{text-decoration:none;color:inherit;}
 /* Text area */
 .s-text-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 14px 16px;display:flex;flex-direction:column;gap:10px;background:var(--card);}
 .s-headline{font-family:var(--fh);font-size:clamp(16px,4vw,22px);font-weight:800;line-height:1.22;letter-spacing:-.01em;color:var(--text);}
-.s-desc{font-size:var(--fs-base);line-height:1.72;color:var(--text2);}
+.s-desc{font-size:var(--fs-base);line-height:1.65;color:var(--text2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .s-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .s-src{font-size:10px;font-weight:700;font-family:var(--fs);color:var(--accent);text-transform:uppercase;letter-spacing:.05em;}
 .s-count{font-size:10px;color:var(--text3);font-family:var(--fs);}
@@ -347,7 +347,7 @@ body.light .ch{color:#1b8a3e;} body.light .cb{color:#b38600;} body.light .cw{col
 
 <!-- LOADING -->
 <div id="ls">
-  <div class="ll">TRUTH<em>Pulse</em></div>
+  <div class="ll">TRUTH</div>
   <div class="lb"><div class="lf"></div></div>
   <div class="lt">Loading real news...</div>
 </div>
@@ -375,7 +375,7 @@ body.light .ch{color:#1b8a3e;} body.light .cb{color:#b38600;} body.light .cw{col
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo-wrap">
-    <div class="logo">TRUTH<em>Pulse</em></div>
+    <div class="logo">TRUTH</div>
     <div class="logo-tag">Real News · No Agenda</div>
   </div>
   <div class="tbr">
@@ -422,7 +422,7 @@ body.light .ch{color:#1b8a3e;} body.light .cb{color:#b38600;} body.light .cw{col
 <div id="swipeView">
   <div class="swipe-track" id="track"></div>
   
-  <div class="s-ctr" id="ctr">1 / 10</div>
+
   <div class="shint" id="hint"><div class="shint-ico">↑</div><div class="shint-txt">SWIPE UP</div></div>
 </div>
 
@@ -517,7 +517,7 @@ const S = {
   idx:0, slideH:0, imgH:0,
   ty0:0, tx0:0, tt0:0, dir:null, dragging:false,
   light:false, votes:{}, tv:0, translated:{},
-  comments:{}, bookmarks:{}, hintDone:false,
+  comments:{}, bookmarks:{}, hintDone:false, loading:false, page:1,
   fontScale:0,  // -2 to +4 (steps of 1px)
   deferredInstall: null,
   isOnline: navigator.onLine
@@ -675,7 +675,7 @@ function xform(list) {
   return list.map((a,i) => ({
     id:'g'+i+'_'+Date.now(),
     title:a.title||'Untitled', desc:a.description||'',
-    content:a.content||a.description||'',
+    content:(a.content||a.description||'').replace(/\[\d+ chars\]/g,'').trim(),
     source:a.source?.name||'Unknown', url:a.url||'#',
     images:a.image?[a.image]:[], cat:catMap(S.cat),
     sources:Math.floor(Math.random()*35)+5,
@@ -779,7 +779,7 @@ function newsHtml(a) {
       <button class="abtn bm ${bm?'saved':''}" id="bm-${a.id}" onclick="toggleBm('${a.id}',event)">${bm?'🔖':'🔖'} ${bm?'Saved':'Save'}</button>
       <button class="abtn sh" onclick="toggleShare('${a.id}',event)">🔗 Share</button>
       <button class="abtn tr ${tr?'on':''}" id="tb-${a.id}" onclick="doTranslate('${a.id}',event)">${tr?'✅ हिंदी':'🌐 हिंदी'}</button>
-      <a href="${a.url}" target="_blank" rel="noopener" class="abtn read" onclick="event.stopPropagation()">Read ↗</a>
+      <button class="abtn read" onclick="openDetailPage('${a.id}',event)">📄 Full Story</button>
     </div>
 
     <!-- SHARE MENU -->
@@ -859,19 +859,14 @@ function moveTo(animate) {
   const track=document.getElementById('track');
   track.style.transition=animate?'transform .38s cubic-bezier(.25,.46,.45,.94)':'none';
   track.style.transform=`translateY(${-S.idx*S.slideH}px)`;
-  updateProg(); updateCtr();
+  updateProg();
 }
 function updateProg() {
   const n=S.slides.length, pct=n>1?(S.idx/(n-1))*100:0;
   const pf=document.getElementById('pf');
   if(pf) pf.style.height=pct+'%';
 }
-function updateCtr() {
-  const news=S.slides.filter(s=>s.type==='news');
-  const ni=S.slides.slice(0,S.idx+1).filter(s=>s.type==='news').length;
-  const el=document.getElementById('ctr');
-  if(el) el.textContent=`${ni} / ${news.length}`;
-}
+
 
 // ═══════════════════════════════════
 // TOUCH — SMART ONE-AT-A-TIME
@@ -909,7 +904,7 @@ sv.addEventListener('touchend',e=>{
   const dy=e.changedTouches[0].clientY-S.ty0;
   const spd=Math.abs(dy)/Math.max(1,Date.now()-S.tt0);
   if(spd>0.25||Math.abs(dy)>55){
-    if(dy<0&&S.idx<S.slides.length-1){S.idx++;doneHint();}
+    if(dy<0&&S.idx<S.slides.length-1){S.idx++;doneHint();checkLoadMore();}
     else if(dy>0&&S.idx>0){S.idx--;}
   }
   S.dir=null; S.dragging=false;
@@ -1338,6 +1333,118 @@ function showSources(id, e) {
   `;
   panel.style.display = 'block';
 }
+
+// ─── CHECK LOAD MORE ──────────────────────────────────────────
+function checkLoadMore() {
+  const newsCount = S.slides.filter(s => s.type === 'news').length;
+  if (S.idx >= S.slides.length - 3 && !S.loading) {
+    loadMoreNews();
+  }
+}
+
+async function loadMoreNews() {
+  if (S.loading) return;
+  S.loading = true;
+  try {
+    let arts = [];
+    const page = (S.page || 1) + 1;
+    if (CFG.live && CFG.gnews) {
+      const r = await fetch(`/api/news?category=${S.cat}&page=${page}`);
+      if (r.ok) { const d = await r.json(); arts = xform(d.articles || []); }
+    } else if (CFG.gnews) {
+      const r = await fetch(gnewsUrl());
+      if (r.ok) { const d = await r.json(); arts = xform(d.articles || []); }
+    }
+    if (arts.length) {
+      S.page = page;
+      const newArts = arts.filter(a => !S.arts.find(x => x.title === a.title));
+      S.arts = [...S.arts, ...newArts];
+      S.slides = buildSlides();
+      renderSwipe();
+      renderGrid();
+    }
+  } catch(e) {}
+  S.loading = false;
+}
+
+// ─── DETAIL PAGE ──────────────────────────────────────────────
+function openDetailPage(id, e) {
+  if(e) e.stopPropagation();
+  const a = S.arts.find(x => x.id === id);
+  if (!a) return;
+  const vd = verdict(a.trust);
+  const rt = readTime(a.content || a.desc);
+
+  document.getElementById('dpSource').textContent = a.source;
+  document.getElementById('dpSrcName').textContent = a.source;
+  document.getElementById('dpReadTime').textContent = '⏱ ' + rt;
+  document.getElementById('dpTitle').textContent = a.title;
+
+  const catEl = document.getElementById('dpCatTag');
+  catEl.textContent = catLbl(a.cat);
+  catEl.className = clr(a.cat);
+  catEl.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;font-family:var(--fs);text-transform:uppercase;letter-spacing:.08em;border:1px solid currentColor;margin-bottom:12px;';
+
+  const verdEl = document.getElementById('dpVerdict');
+  verdEl.textContent = vd.icon + ' ' + vd.label;
+  verdEl.style.color = a.trust>=80?'var(--green)':a.trust>=60?'var(--yellow)':'var(--red)';
+  verdEl.style.borderColor = a.trust>=80?'var(--green)':a.trust>=60?'var(--yellow)':'var(--red)';
+
+  // Images
+  const imgs = a.images || [];
+  const imgEl = document.getElementById('dpImg');
+  if (imgs.length) {
+    imgEl.style.minHeight = '220px';
+    imgEl.innerHTML = `<div style="position:relative;width:100%;padding-top:56%;overflow:hidden;border-radius:12px;background:var(--card2);">
+      <div id="dpImgScroll" style="position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;">
+        ${imgs.map((src,i) => `<div style="flex-shrink:0;width:100%;height:100%;scroll-snap-align:start;position:relative;cursor:zoom-in;" onclick="openLightbox('${src}','${x(a.title)}')">
+          <img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" onerror="this.parentElement.style.display='none'">
+        </div>`).join('')}
+      </div>
+      ${imgs.length>1?`<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;">
+        ${imgs.map((_,i)=>`<div style="width:${i===0?'14px':'4px'};height:4px;border-radius:100px;background:${i===0?'#fff':'rgba(255,255,255,.45)'};transition:all .25s;"></div>`).join('')}
+      </div>`:''}
+    </div>`;
+  } else {
+    imgEl.style.minHeight = '120px';
+    imgEl.innerHTML = `<div style="font-size:80px;padding:20px;">${a.em}</div>`;
+  }
+
+  // Content - clean and full
+  const cleanContent = (a.content || a.desc || '')
+    .replace(/\[.*?chars\]/g, '')
+    .replace(/\[.*?more\]/g, '')
+    .trim();
+  document.getElementById('dpContent').textContent = cleanContent;
+
+  const link = a.url && a.url !== '#' ? a.url : '';
+  const extLink = document.getElementById('dpExtLink');
+  const fullLink = document.getElementById('dpFullLink');
+  if (link) {
+    extLink.href = link;
+    extLink.style.display = 'inline-flex';
+    fullLink.href = link;
+    fullLink.textContent = link;
+  } else {
+    extLink.style.display = 'none';
+    fullLink.textContent = 'Direct link not available';
+  }
+
+  // Actions
+  document.getElementById('dpActions').innerHTML = `
+    <button class="abtn up" onclick="castVote('${a.id}','up',event)">👍 ${(S.votes[a.id]||{}).up||0}</button>
+    <button class="abtn dn" onclick="castVote('${a.id}','dn',event)">👎 ${(S.votes[a.id]||{}).dn||0}</button>
+    <button class="abtn sh" onclick="toggleShare('${a.id}',event)">🔗 Share</button>
+    <button class="abtn tr" onclick="doTranslate('${a.id}',event)" id="tb-${a.id}">🌐 हिंदी</button>
+  `;
+
+  document.getElementById('detailPage').style.display = 'block';
+  document.getElementById('detailPage').scrollTop = 0;
+}
+
+function closeDetailPage() {
+  document.getElementById('detailPage').style.display = 'none';
+}
 </script>
 
 <!-- SOURCE PANEL MODAL -->
@@ -1356,6 +1463,31 @@ function showSources(id, e) {
   <button onclick="document.getElementById('lightbox').style.display='none'" style="position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;z-index:1;">✕</button>
   <img id="lbImg" src="" style="max-width:95vw;max-height:85vh;object-fit:contain;border-radius:10px;" />
   <div id="lbCaption" style="color:rgba(255,255,255,.6);font-size:12px;margin-top:10px;font-family:var(--fs);text-align:center;padding:0 20px;"></div>
+</div>
+
+<!-- DETAIL PAGE -->
+<div id="detailPage" style="display:none;position:fixed;inset:0;z-index:550;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;">
+    <button onclick="closeDetailPage()" style="width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--border);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">←</button>
+    <div style="font-size:13px;font-weight:700;font-family:var(--fs);color:var(--text2);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;" id="dpSource"></div>
+    <a id="dpExtLink" href="#" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);font-family:var(--fs);font-weight:700;border:1px solid var(--accent);padding:5px 12px;border-radius:100px;white-space:nowrap;flex-shrink:0;">Original ↗</a>
+  </div>
+  <div style="max-width:700px;margin:0 auto;padding:16px 16px 40px;">
+    <div id="dpCatTag" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;font-family:var(--fs);text-transform:uppercase;letter-spacing:.08em;border:1px solid currentColor;margin-bottom:12px;"></div>
+    <h1 id="dpTitle" style="font-family:var(--fh);font-size:clamp(18px,5vw,28px);font-weight:900;line-height:1.2;letter-spacing:-.02em;color:var(--text);margin-bottom:12px;"></h1>
+    <div id="dpImg" style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:14px;background:var(--card2);display:flex;align-items:center;justify-content:center;min-height:180px;"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <span id="dpSrcName" style="font-size:11px;font-weight:800;font-family:var(--fs);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;"></span>
+      <span id="dpReadTime" style="font-size:11px;color:var(--text3);font-family:var(--fs);"></span>
+      <span id="dpVerdict" style="font-size:10px;font-weight:700;font-family:var(--fs);padding:3px 10px;border-radius:100px;border:1px solid currentColor;"></span>
+    </div>
+    <div id="dpContent" style="font-size:16px;line-height:1.8;color:var(--text2);margin-bottom:20px;white-space:pre-wrap;"></div>
+    <div style="padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;font-family:var(--fs);color:var(--text3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;">🔗 Original Source</div>
+      <a id="dpFullLink" href="#" target="_blank" rel="noopener" style="font-size:13px;color:var(--accent);word-break:break-all;"></a>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="dpActions"></div>
+  </div>
 </div>
 </body>
 </html>
